@@ -1,0 +1,55 @@
+Metadata-Version: 2.1
+Name: smopy
+Version: 0.0.8
+Summary: OpenStreetMap image tiles in Python
+Home-page: https://github.com/rossant/smopy
+Author: Cyrille Rossant
+Author-email: rossant@users.noreply.github.com
+License: BSD
+Keywords: openstreetmap matplotlib map maps ipython
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Topic :: Utilities
+Classifier: Framework :: IPython
+Classifier: License :: OSI Approved :: BSD License
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: pillow
+Requires-Dist: six
+Requires-Dist: matplotlib
+Provides-Extra: ipython
+Requires-Dist: ipython ; extra == 'ipython'
+
+Smopy
+=====
+
+Give a box in geographical coordinates (latitude/longitude) and a zoom level,
+Smopy returns an OpenStreetMap tile image!
+
+
+Installation
+------------
+
+Smopy currently requires:
+
+* Pillow
+* NumPy
+* matplotlib
+* IPython (optional)
+
+
+To install Smopy run ``pip install smopy``.
+
+For IPython support run ``pip install smopy[ipython]``.
+
+To install Smopy directly from the repository clone the project and put the folder in your PYTHONPATH.
+
+
+Terms of use
+------------
+
+This module fetches image maps from `OpenStreetMap <http://www.openstreetmap.org/>`_'s servers.
+See the `Tile usage policy <http://wiki.openstreetmap.org/wiki/Tile_usage_policy>`_.
+In particular, **be careful not to retrieve large maps** as this can overload the servers.
+
+

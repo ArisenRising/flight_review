@@ -58,10 +58,10 @@ def update_vehicle_db_entry(cur, ulog, log_id, vehicle_name):
             db_tuple = cur.fetchone()
             if db_tuple is not None:
                 vehicle_data.name = db_tuple[0]
-            print('reading vehicle name from db:'+vehicle_data.name)
+            print('reading vehicle name from db:' + vehicle_data.name)
         else:
             vehicle_data.name = vehicle_name
-            print('vehicle name from uploader:'+vehicle_data.name)
+            print('vehicle name from uploader:' + vehicle_data.name)
 
         vehicle_data.log_id = log_id
         flight_time = get_total_flight_time(ulog)
@@ -111,19 +111,25 @@ class UploadHandler(TornadoRequestHandlerBase):
         """ POST request callback """
         if self.multipart_streamer:
             try:
+                print("Processing POST request")
                 self.multipart_streamer.data_complete()
+
                 form_data = self.multipart_streamer.get_values(
                     ['description', 'email',
                      'allowForAnalysis', 'obfuscated', 'source', 'type',
                      'feedback', 'windSpeed', 'rating', 'videoUrl', 'public',
                      'vehicleName', 'redirect'])
+
+                # Debug information
+                print(f"Form data received: {form_data}")
+
                 description = escape(form_data['description'].decode("utf-8"))
                 email = form_data['email'].decode("utf-8")
                 upload_type = 'personal'
                 if 'type' in form_data:
                     upload_type = form_data['type'].decode("utf-8")
                 source = 'webui'
-                title = '' # may be used in future...
+                title = ''  # may be used in future...
                 if 'source' in form_data:
                     source = form_data['source'].decode("utf-8")
                 obfuscated = 0
@@ -156,7 +162,8 @@ class UploadHandler(TornadoRequestHandlerBase):
                             wind_speed = -1
                     if 'rating' in form_data:
                         rating = escape(form_data['rating'].decode("utf-8"))
-                        if rating == 'notset': rating = ''
+                        if rating == 'notset':
+                            rating = ''
                     # get video url & check if valid
                     if 'videoUrl' in form_data:
                         video_url = escape(form_data['videoUrl'].decode("utf-8"), quote=True)
@@ -171,7 +178,13 @@ class UploadHandler(TornadoRequestHandlerBase):
                         if form_data['public'].decode("utf-8") == 'true':
                             is_public = 1
 
-                file_obj = self.multipart_streamer.get_parts_by_name('filearg')[0]
+                print(f"Received form data: {form_data}")
+
+                file_obj = self.multipart_streamer.get_parts_by_name('filearg')
+                if not file_obj:
+                    raise CustomHTTPError(400, 'File part not found in the request')
+
+                file_obj = file_obj[0]
                 upload_file_name = file_obj.get_filename()
 
                 while True:
@@ -182,8 +195,7 @@ class UploadHandler(TornadoRequestHandlerBase):
 
                 # read file header & check if really an ULog file
                 header_len = len(ULog.HEADER_BYTES)
-                if (file_obj.get_payload_partial(header_len) !=
-                        ULog.HEADER_BYTES):
+                if file_obj.get_payload_partial(header_len) != ULog.HEADER_BYTES:
                     raise CustomHTTPError(400, 'Invalid File')
 
                 print('Moving uploaded file to', new_file_name)
@@ -202,7 +214,6 @@ class UploadHandler(TornadoRequestHandlerBase):
                 if source != 'CI':
                     ulog_file_name = get_log_filename(log_id)
                     ulog = load_ulog_file(ulog_file_name)
-
 
                 # put additional data into a DB
                 con = sqlite3.connect(get_db_filename())
@@ -224,12 +235,12 @@ class UploadHandler(TornadoRequestHandlerBase):
 
                 con.commit()
 
-                url = '/plot_app?log='+log_id
-                full_plot_url = get_http_protocol()+'://'+get_domain_name()+url
+                url = '/plot_app?log=' + log_id
+                full_plot_url = get_http_protocol() + '://' + get_domain_name() + url
                 print(full_plot_url)
 
-                delete_url = get_http_protocol()+'://'+get_domain_name()+ \
-                    '/edit_entry?action=delete&log='+log_id+'&token='+token
+                delete_url = get_http_protocol() + '://' + get_domain_name() + \
+                             '/edit_entry?action=delete&log=' + log_id + '&token=' + token
 
                 # information for the notification email
                 info = {}
@@ -263,17 +274,16 @@ class UploadHandler(TornadoRequestHandlerBase):
                         info['uuid'] = escape(ulog.msg_info_dict['sys_uuid'])
                     branch_info = ''
                     if 'ver_sw_branch' in ulog.msg_info_dict:
-                        branch_info = ' (branch: '+ulog.msg_info_dict['ver_sw_branch']+')'
+                        branch_info = ' (branch: ' + ulog.msg_info_dict['ver_sw_branch'] + ')'
                     if 'ver_sw' in ulog.msg_info_dict:
                         ver_sw = escape(ulog.msg_info_dict['ver_sw'])
                         info['software'] = ver_sw + branch_info
-
 
                 if upload_type == 'flightreport' and is_public and source != 'CI':
                     destinations = set(email_notifications_config['public_flightreport'])
                     if rating in ['unsatisfactory', 'crash_sw_hw', 'crash_pilot']:
                         destinations = destinations | \
-                            set(email_notifications_config['public_flightreport_bad'])
+                                       set(email_notifications_config['public_flightreport_bad'])
                     send_flightreport_email(
                         list(destinations),
                         full_plot_url,
@@ -315,4 +325,3 @@ class UploadHandler(TornadoRequestHandlerBase):
 
             finally:
                 self.multipart_streamer.release_parts()
-
