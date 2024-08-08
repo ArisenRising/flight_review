@@ -29,7 +29,7 @@ from overview_generator import generate_overview_img_from_id
 #pylint: disable=relative-beyond-top-level
 from .common import get_jinja_env, CustomHTTPError, generate_db_data_from_log_file, \
     TornadoRequestHandlerBase
-from .send_email import send_notification_email, send_flightreport_email
+#from .send_email import send_notification_email, send_flightreport_email
 from .multipart_streamer import MultiPartStreamer
 
 
@@ -284,12 +284,15 @@ class UploadHandler(TornadoRequestHandlerBase):
                     if rating in ['unsatisfactory', 'crash_sw_hw', 'crash_pilot']:
                         destinations = destinations | \
                                        set(email_notifications_config['public_flightreport_bad'])
-                    send_flightreport_email(
-                        list(destinations),
-                        full_plot_url,
-                        DBData.rating_str_static(rating),
-                        DBData.wind_speed_str_static(wind_speed), delete_url,
-                        email, info)
+                    # send_flightreport_email(
+#     list(destinations),
+#     full_plot_url,
+#     DBData.rating_str_static(rating),
+#     DBData.wind_speed_str_static(wind_speed),
+#     delete_url,
+#     email,
+#     info
+# )
 
                     # also generate the additional DB entry
                     # (we may have the log already loaded in 'ulog', however the
@@ -303,7 +306,7 @@ class UploadHandler(TornadoRequestHandlerBase):
                 con.close()
 
                 # send notification emails
-                send_notification_email(email, full_plot_url, delete_url, info)
+                #send_notification_email(email, full_plot_url, delete_url, info)
 
                 if should_redirect:
                     self.redirect(url)
